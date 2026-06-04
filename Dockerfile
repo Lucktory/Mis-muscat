@@ -27,15 +27,16 @@ RUN npm ci
 # App source
 COPY . .
 
-# Build + finalise
-RUN composer dump-autoload --optimize \
+# Build + finalise. Create storage dirs first so artisan package:discover
+# (triggered by composer dump-autoload) can write its view cache.
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing storage/logs bootstrap/cache database \
+    && chmod -R 777 storage bootstrap/cache database \
+    && composer dump-autoload --optimize \
     && cp .env.example .env \
     && php artisan key:generate --force \
     && npm run build \
     && rm -rf node_modules \
-    && mkdir -p database \
-    && touch database/database.sqlite \
-    && chmod -R 777 storage bootstrap/cache database
+    && touch database/database.sqlite
 
 EXPOSE 10000
 

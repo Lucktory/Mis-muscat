@@ -14,10 +14,6 @@ public/build
 public/hot
 public/storage
 storage/logs/*.log
-storage/framework/cache/data
-storage/framework/sessions
-storage/framework/views
-storage/framework/testing
 .env
 .env.local
 .env.backup
