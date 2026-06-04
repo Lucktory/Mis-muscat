@@ -24,8 +24,6 @@ storage/framework/testing
 .env.production
 .phpunit.result.cache
 .phpunit.cache
-Dockerfile
-.dockerignore
 README.md
 tests
 phpunit.xml
