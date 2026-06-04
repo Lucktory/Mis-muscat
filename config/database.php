@@ -8,9 +8,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | The customer-demo runs entirely on SQLite. Other Laravel-supported
-    | drivers (mysql, mariadb, pgsql, sqlsrv) and the Redis block are
-    | intentionally not declared here so deploy-time scanners on free
-    | hosts do not flag false service dependencies.
+    | relational drivers and the Redis block are intentionally not
+    | declared so deploy-time scanners on free hosts do not flag false
+    | service dependencies.
     |
     */
 
