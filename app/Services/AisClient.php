@@ -8,9 +8,13 @@ use Illuminate\Support\Facades\Cache;
  * AIS client — stub implementation
  *
  * Returns fake but coordinate-realistic vessel positions per MMSI.
- * Designed so that swapping to a live feed (AISStream.io WebSocket or
- * VesselFinder REST) replaces only the body of latest(), not the call
- * sites. Cached for 60 seconds to mirror the real feed cadence.
+ * Positions are spread across the Arabian Sea, Indian Ocean,
+ * Mediterranean, Suez Canal, and the Strait of Hormuz so the
+ * customer dashboard shows credible global movement, not a fleet
+ * clustered around Oman. Designed so that swapping to a live feed
+ * (AISStream.io WebSocket or VesselFinder REST) replaces only the
+ * body of latest(), not the call sites. Cached for 60 seconds to
+ * mirror the real feed cadence.
  */
 class AisClient
 {
@@ -30,21 +34,38 @@ class AisClient
 
     /**
      * Static coordinate map per MMSI in the demo dataset. Each
-     * position is realistic for the booking's described route at the
-     * demo's notional "now". Live integration will replace this map.
+     * position is realistic for the booking's route at the demo's
+     * notional "now". Live integration will replace this map.
      */
     private function positions(): array
     {
         return [
-            '538001234' => ['lat' => 23.94, 'lng' => 56.40],  // Strait of Hormuz — MV Pacific Crown
-            '538009876' => ['lat' => 24.34, 'lng' => 56.71],  // Sohar Port berth
-            '247234567' => ['lat' => 25.02, 'lng' => 55.13],  // Jebel Ali (delivered)
-            '563101234' => ['lat' => 22.30, 'lng' => 58.40],  // Salalah Express, en route Sohar
-            '525012345' => ['lat' => -8.12, 'lng' => 49.30],  // Indian Ocean, southbound
-            '466011223' => ['lat' => 25.30, 'lng' => 51.50],  // Doha consignee
-            '255805234' => ['lat' => 25.02, 'lng' => 55.13],  // Jebel Ali transhipment
-            '227093890' => ['lat' => 30.05, 'lng' => 32.55],  // Suez Canal
-            '419075123' => ['lat' => 19.05, 'lng' => 72.85],  // Mumbai (delivered)
+            // Pacific Crown — mid-Arabian Sea, Mumbai-bound for Sohar
+            '538001234' => ['lat' => 21.40,  'lng' => 62.30],
+
+            // Sohar Heavy — at Salalah Port awaiting customs (south Oman coast)
+            '538009876' => ['lat' => 16.94,  'lng' => 54.01],
+
+            // MSC Astrid — delivered Jebel Ali
+            '247234567' => ['lat' => 25.02,  'lng' => 55.13],
+
+            // Salalah Express — Adam highway, en route Sohar
+            '563101234' => ['lat' => 22.30,  'lng' => 58.40],
+
+            // Arabia Express — Indian Ocean, off East Africa, southbound to Dar es Salaam
+            '525012345' => ['lat' => -4.20,  'lng' => 49.80],
+
+            // Doha Reefer — delivered Qatar
+            '466011223' => ['lat' => 25.30,  'lng' => 51.50],
+
+            // MSC Galatea — Suez transit, US-bound via Mediterranean
+            '255805234' => ['lat' => 31.20,  'lng' => 32.34],
+
+            // CMA CGM Atlas — mid-Mediterranean, east of Malta, Antwerp-bound
+            '227093890' => ['lat' => 35.40,  'lng' => 15.10],
+
+            // India Star — delivered Mumbai (NSA)
+            '419075123' => ['lat' => 18.95,  'lng' => 72.85],
         ];
     }
 }

@@ -1,6 +1,20 @@
 @extends('layouts.customer')
 
 @section('content')
+<div x-data="{ show: !sessionStorage.getItem('mis_splash_v1') }"
+     x-init="if (show) { sessionStorage.setItem('mis_splash_v1', '1'); setTimeout(() => show = false, 1300) }"
+     x-show="show"
+     x-cloak
+     x-transition:leave="transition-opacity duration-300"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white">
+    <img src="{{ asset('logo.png') }}" alt="MIS Logistics" class="h-20 w-auto">
+    <div class="mt-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">Muscat International Shipping &amp; Logistics</div>
+    <div class="mt-8 h-0.5 w-72 overflow-hidden rounded-full bg-slate-100">
+        <div class="mis-splash-bar h-full bg-[#0f3b66]"></div>
+    </div>
+</div>
+
 <section class="bg-gradient-to-b from-white to-slate-50">
     <div class="mx-auto max-w-4xl px-6 py-20 text-center">
         <p class="text-sm font-semibold uppercase tracking-wider text-[#0f3b66]">Customer Tracking</p>
@@ -22,13 +36,29 @@
             </button>
         </form>
 
-        <div class="mt-8 text-xs text-slate-500">
-            <span class="font-medium text-slate-600">Demo bookings to try:</span>
-            <span class="ml-2 inline-flex flex-wrap justify-center gap-2">
-                <a href="{{ route('track.show', ['id' => 'MIS-2026-0421']) }}" class="rounded border border-slate-200 bg-white px-2.5 py-1 font-mono text-slate-700 hover:border-[#0f3b66] hover:text-[#0f3b66]">MIS-2026-0421</a>
-                <a href="{{ route('track.show', ['id' => 'MIS-2026-0419']) }}" class="rounded border border-slate-200 bg-white px-2.5 py-1 font-mono text-slate-700 hover:border-[#0f3b66] hover:text-[#0f3b66]">MIS-2026-0419</a>
-                <a href="{{ route('track.show', ['id' => 'MIS-2026-0410']) }}" class="rounded border border-slate-200 bg-white px-2.5 py-1 font-mono text-slate-700 hover:border-[#0f3b66] hover:text-[#0f3b66]">MIS-2026-0410</a>
-            </span>
+        <div class="mt-10">
+            <div class="text-xs font-medium uppercase tracking-wider text-slate-500">Live demo bookings</div>
+            <div class="mx-auto mt-3 flex max-w-3xl flex-wrap justify-center gap-2">
+                @foreach(array_keys(config('demo-bookings', [])) as $bookingId)
+                    @php
+                        $b = config('demo-bookings.' . $bookingId);
+                        $codeColors = [
+                            'in_transit' => 'border-blue-200 text-blue-700 bg-blue-50',
+                            'at_port'    => 'border-blue-200 text-blue-700 bg-blue-50',
+                            'picked_up'  => 'border-blue-200 text-blue-700 bg-blue-50',
+                            'booked'     => 'border-slate-200 text-slate-700 bg-white',
+                            'delivered'  => 'border-slate-200 text-slate-500 bg-white',
+                            'exception'  => 'border-red-200 text-red-700 bg-red-50',
+                        ];
+                        $cls = $codeColors[$b['status_code']] ?? 'border-slate-200 text-slate-700 bg-white';
+                    @endphp
+                    <a href="{{ route('track.show', ['id' => $bookingId]) }}"
+                       class="inline-flex items-center gap-2 rounded-md border {{ $cls }} px-3 py-1.5 text-xs font-mono transition hover:border-[#0f3b66] hover:text-[#0f3b66]">
+                        <span>{{ $bookingId }}</span>
+                        <span class="text-[10px] uppercase tracking-wider opacity-70">{{ str_replace('_', ' ', $b['status_code']) }}</span>
+                    </a>
+                @endforeach
+            </div>
         </div>
     </div>
 </section>

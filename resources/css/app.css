@@ -10,3 +10,13 @@
     --color-mis-navy: #0f3b66;
     --color-mis-navy-dark: #0a2a4d;
 }
+
+@keyframes mis-splash-bar {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+
+.mis-splash-bar {
+    transform-origin: left center;
+    animation: mis-splash-bar 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}

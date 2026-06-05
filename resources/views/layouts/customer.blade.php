@@ -20,8 +20,8 @@
     <header class="border-b border-slate-200 bg-white">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
             <a href="{{ route('home') }}" class="flex items-center gap-3">
-                <span class="flex h-10 w-10 items-center justify-center rounded bg-[#0f3b66] text-sm font-bold text-white">MIS</span>
-                <span class="text-sm font-semibold tracking-wide text-slate-900">
+                <img src="{{ asset('logo.png') }}" alt="MIS Logistics" class="h-10 w-auto">
+                <span class="hidden text-sm font-semibold tracking-wide text-slate-900 sm:inline">
                     Muscat International Shipping &amp; Logistics
                 </span>
             </a>
