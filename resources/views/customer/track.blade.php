@@ -11,6 +11,27 @@
     ];
     $style = $statusStyles[$booking['status_code']] ?? $statusStyles['booked'];
     $position = app(\App\Services\AisClient::class)->latest($booking['vessel_mmsi'] ?? null);
+
+    // Port gazetteer for origin/destination markers and route polyline
+    $ports = [
+        'Mumbai, India'                  => [19.05,  72.85],
+        'Mumbai (BOM), India'            => [19.09,  72.86],
+        'Mumbai (NSA), India'            => [18.94,  72.95],
+        'Sohar, Oman'                    => [24.34,  56.71],
+        'Sohar Port, Oman'               => [24.50,  56.65],
+        'Salalah, Oman'                  => [16.94,  54.01],
+        'Muscat, Oman'                   => [23.61,  58.59],
+        'Muscat Industrial Estate'       => [23.61,  58.59],
+        'Jebel Ali, UAE'                 => [25.02,  55.13],
+        'Antwerp, Belgium'               => [51.22,   4.40],
+        'Houston (IAH), USA'             => [29.76, -95.36],
+        'Doha, Qatar'                    => [25.30,  51.50],
+        'Dar es Salaam, Tanzania'        => [ -6.82,  39.28],
+        'Duqm, Oman'                     => [19.65,  57.71],
+        'Sohar Industrial Estate'        => [24.34,  56.71],
+    ];
+    $originCoords = $ports[$booking['origin']] ?? null;
+    $destCoords   = $ports[$booking['destination']] ?? null;
 @endphp
 
 @section('content')
@@ -56,6 +77,45 @@
                 @if($position)
                 <div id="vessel-map" class="h-80 w-full"></div>
                 @push('scripts')
+                <style>
+                    .vessel-marker-div { position: relative; width: 40px; height: 40px; }
+                    .vessel-dot {
+                        position: absolute; left: 50%; top: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 14px; height: 14px;
+                        background: #3b82f6;
+                        border: 2px solid #0f3b66;
+                        border-radius: 50%;
+                        z-index: 2;
+                        box-shadow: 0 0 0 2px rgba(255,255,255,0.9);
+                    }
+                    .vessel-pulse-ring {
+                        position: absolute; left: 50%; top: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 14px; height: 14px;
+                        border: 2px solid #3b82f6;
+                        border-radius: 50%;
+                        opacity: 0;
+                        animation: vessel-pulse 1.8s ease-out infinite;
+                        z-index: 1;
+                    }
+                    .vessel-pulse-ring.delay { animation-delay: 0.9s; }
+                    @keyframes vessel-pulse {
+                        0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0.85; }
+                        100% { transform: translate(-50%, -50%) scale(4.5); opacity: 0; }
+                    }
+                    .port-marker-div {
+                        background: #ffffff;
+                        border: 2px solid #475569;
+                        border-radius: 50%;
+                        width: 12px; height: 12px;
+                    }
+                    .port-marker-div.destination {
+                        border-color: #0f3b66;
+                        background: #0f3b66;
+                        width: 14px; height: 14px;
+                    }
+                </style>
                 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
                         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
                         crossorigin=""></script>
@@ -66,18 +126,72 @@
                         const map = L.map('vessel-map', {
                             zoomControl: true,
                             attributionControl: false,
-                        }).setView([lat, lng], 5);
+                        }).setView([lat, lng], 4);
                         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                             maxZoom: 19,
                         }).addTo(map);
-                        const marker = L.circleMarker([lat, lng], {
-                            radius: 8,
-                            color: '#0f3b66',
-                            fillColor: '#3b82f6',
-                            fillOpacity: 0.9,
-                            weight: 2,
+
+                        // Pulsing vessel marker (current position)
+                        const vesselIcon = L.divIcon({
+                            className: 'vessel-marker-div',
+                            html: '<div class="vessel-pulse-ring"></div>' +
+                                  '<div class="vessel-pulse-ring delay"></div>' +
+                                  '<div class="vessel-dot"></div>',
+                            iconSize: [40, 40],
+                            iconAnchor: [20, 20],
+                        });
+                        const vesselMarker = L.marker([lat, lng], { icon: vesselIcon }).addTo(map);
+                        vesselMarker.bindTooltip(
+                            "{{ ($position['name'] ?? null) ? 'MV ' . addslashes($position['name']) : addslashes($booking['vessel_name']) }}" +
+                            "<br><span style='font-size:10px;color:#64748b'>Current position</span>",
+                            { permanent: false, direction: 'top', offset: [0, -8] }
+                        );
+
+                        // Route points: origin → current → destination
+                        const routePoints = [];
+
+                        @if($originCoords)
+                        const originLatLng = [{{ $originCoords[0] }}, {{ $originCoords[1] }}];
+                        const originIcon = L.divIcon({
+                            className: 'port-marker-div',
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6],
+                        });
+                        L.marker(originLatLng, { icon: originIcon }).addTo(map)
+                            .bindTooltip("Origin: {{ addslashes($booking['origin']) }}", { permanent: false, direction: 'top', offset: [0, -4] });
+                        routePoints.push(originLatLng);
+                        @endif
+
+                        routePoints.push([lat, lng]);
+
+                        @if($destCoords)
+                        const destLatLng = [{{ $destCoords[0] }}, {{ $destCoords[1] }}];
+                        const destIcon = L.divIcon({
+                            className: 'port-marker-div destination',
+                            iconSize: [14, 14],
+                            iconAnchor: [7, 7],
+                        });
+                        L.marker(destLatLng, { icon: destIcon }).addTo(map)
+                            .bindTooltip("Destination: {{ addslashes($booking['destination']) }}", { permanent: false, direction: 'top', offset: [0, -4] });
+                        routePoints.push(destLatLng);
+                        @endif
+
+                        // Route polyline: solid completed leg + dashed remaining leg
+                        @if($originCoords)
+                        L.polyline([routePoints[0], [lat, lng]], {
+                            color: '#0f3b66', weight: 2, opacity: 0.7,
                         }).addTo(map);
-                        marker.bindTooltip("{{ $booking['vessel_name'] }}", { permanent: false, direction: 'top' }).openTooltip();
+                        @endif
+                        @if($destCoords)
+                        L.polyline([[lat, lng], routePoints[routePoints.length - 1]], {
+                            color: '#3b82f6', weight: 2, opacity: 0.5, dashArray: '6, 8',
+                        }).addTo(map);
+                        @endif
+
+                        // Fit map to all route points
+                        if (routePoints.length > 1) {
+                            map.fitBounds(L.latLngBounds(routePoints), { padding: [50, 50], maxZoom: 6 });
+                        }
                     });
                 </script>
                 @endpush
