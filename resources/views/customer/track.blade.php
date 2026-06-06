@@ -40,11 +40,13 @@
                 <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
                     <div class="flex items-baseline justify-between">
                         <h2 class="text-sm font-semibold text-slate-900">Vessel position</h2>
-                        @if($position)
-                            <span class="text-xs text-slate-500">
-                                Live AIS &middot; refreshed
+                        @if($position && ($position['source'] ?? null) === 'aisstream.io')
+                            <span class="text-xs text-blue-700">
+                                Live AIS &middot; received {{ \Illuminate\Support\Carbon::parse($position['received_at'] ?? now())->diffForHumans() }}
                                 <span class="ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-500 align-middle"></span>
                             </span>
+                        @elseif($position)
+                            <span class="text-xs text-slate-500">Last known position</span>
                         @else
                             <span class="text-xs text-slate-500">No AIS feed (intra-Oman or air freight)</span>
                         @endif
@@ -86,7 +88,9 @@
                 @endif
 
                 <div class="border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-600">
-                    <span class="font-medium text-slate-900">{{ $booking['vessel_name'] }}</span>
+                    <span class="font-medium text-slate-900">
+                        {{ ($position['name'] ?? null) ? 'MV ' . $position['name'] : $booking['vessel_name'] }}
+                    </span>
                     @if($position)
                         &middot; {{ number_format($position['lat'], 2) }}&deg;, {{ number_format($position['lng'], 2) }}&deg;
                     @endif

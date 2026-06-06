@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'aisstream' => [
+        'key' => env('AISSTREAM_API_KEY'),
+        'endpoint' => env('AISSTREAM_ENDPOINT', 'wss://stream.aisstream.io/v0/stream'),
+    ],
+
 ];
