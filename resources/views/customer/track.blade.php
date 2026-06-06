@@ -108,13 +108,39 @@
                         background: #ffffff;
                         border: 2px solid #475569;
                         border-radius: 50%;
-                        width: 12px; height: 12px;
+                        width: 14px; height: 14px;
+                        box-shadow: 0 0 0 2px rgba(255,255,255,0.9);
                     }
                     .port-marker-div.destination {
                         border-color: #0f3b66;
                         background: #0f3b66;
-                        width: 14px; height: 14px;
+                        width: 16px; height: 16px;
                     }
+                    .port-label {
+                        background: rgba(255,255,255,0.95);
+                        border: 1px solid rgba(148, 163, 184, 0.4);
+                        border-radius: 4px;
+                        box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+                        color: #334155;
+                        font-size: 11px;
+                        font-weight: 500;
+                        padding: 2px 7px;
+                        white-space: nowrap;
+                    }
+                    .port-label.destination {
+                        color: #0f3b66;
+                        border-color: rgba(15, 59, 102, 0.4);
+                    }
+                    .port-label::before { display: none !important; }
+                    .leaflet-tooltip.port-label:before { display: none !important; }
+                    .leaflet-bar a.map-action-btn {
+                        background: #ffffff;
+                        color: #0f3b66;
+                        display: flex; align-items: center; justify-content: center;
+                        width: 30px; height: 30px;
+                    }
+                    .leaflet-bar a.map-action-btn:hover { background: #f1f5f9; }
+                    .leaflet-bar a.map-action-btn svg { width: 16px; height: 16px; }
                 </style>
                 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
                         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -154,11 +180,13 @@
                         const originLatLng = [{{ $originCoords[0] }}, {{ $originCoords[1] }}];
                         const originIcon = L.divIcon({
                             className: 'port-marker-div',
-                            iconSize: [12, 12],
-                            iconAnchor: [6, 6],
+                            iconSize: [14, 14],
+                            iconAnchor: [7, 7],
                         });
                         L.marker(originLatLng, { icon: originIcon }).addTo(map)
-                            .bindTooltip("Origin: {{ addslashes($booking['origin']) }}", { permanent: false, direction: 'top', offset: [0, -4] });
+                            .bindTooltip("{{ addslashes($booking['origin']) }}", {
+                                permanent: true, direction: 'bottom', offset: [0, 6], className: 'port-label'
+                            });
                         routePoints.push(originLatLng);
                         @endif
 
@@ -168,11 +196,13 @@
                         const destLatLng = [{{ $destCoords[0] }}, {{ $destCoords[1] }}];
                         const destIcon = L.divIcon({
                             className: 'port-marker-div destination',
-                            iconSize: [14, 14],
-                            iconAnchor: [7, 7],
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8],
                         });
                         L.marker(destLatLng, { icon: destIcon }).addTo(map)
-                            .bindTooltip("Destination: {{ addslashes($booking['destination']) }}", { permanent: false, direction: 'top', offset: [0, -4] });
+                            .bindTooltip("{{ addslashes($booking['destination']) }}", {
+                                permanent: true, direction: 'bottom', offset: [0, 7], className: 'port-label destination'
+                            });
                         routePoints.push(destLatLng);
                         @endif
 
@@ -188,10 +218,47 @@
                         }).addTo(map);
                         @endif
 
-                        // Fit map to all route points
+                        // Fit map to all route points initially
+                        const routeBounds = L.latLngBounds(routePoints);
                         if (routePoints.length > 1) {
-                            map.fitBounds(L.latLngBounds(routePoints), { padding: [50, 50], maxZoom: 6 });
+                            map.fitBounds(routeBounds, { padding: [50, 50], maxZoom: 6 });
                         }
+
+                        // "Center on vessel" + "Show full route" map controls
+                        const MapActionControl = L.Control.extend({
+                            options: { position: 'topright' },
+                            onAdd: function () {
+                                const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+
+                                const focusBtn = L.DomUtil.create('a', 'map-action-btn', div);
+                                focusBtn.href = '#';
+                                focusBtn.title = 'Centrar en el barco / Center on vessel';
+                                focusBtn.setAttribute('role', 'button');
+                                focusBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="8.5"/><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/></svg>';
+                                L.DomEvent.on(focusBtn, 'click', function (e) {
+                                    L.DomEvent.preventDefault(e);
+                                    L.DomEvent.stopPropagation(e);
+                                    map.flyTo([lat, lng], 7, { duration: 0.8 });
+                                });
+
+                                const routeBtn = L.DomUtil.create('a', 'map-action-btn', div);
+                                routeBtn.href = '#';
+                                routeBtn.title = 'Ver ruta completa / Show full route';
+                                routeBtn.setAttribute('role', 'button');
+                                routeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 4 5 11 11 11 11 17"/><circle cx="5" cy="4" r="1.5"/><circle cx="11" cy="17" r="1.5" fill="currentColor"/><polyline points="11 17 18 17 18 6"/><circle cx="18" cy="6" r="1.5"/></svg>';
+                                L.DomEvent.on(routeBtn, 'click', function (e) {
+                                    L.DomEvent.preventDefault(e);
+                                    L.DomEvent.stopPropagation(e);
+                                    if (routePoints.length > 1) {
+                                        map.flyToBounds(routeBounds, { padding: [50, 50], maxZoom: 6, duration: 0.8 });
+                                    }
+                                });
+
+                                L.DomEvent.disableClickPropagation(div);
+                                return div;
+                            }
+                        });
+                        new MapActionControl().addTo(map);
                     });
                 </script>
                 @endpush
