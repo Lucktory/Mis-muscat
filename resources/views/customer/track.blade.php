@@ -186,8 +186,14 @@
                             { permanent: false, direction: 'top', offset: [0, -8] }
                         );
 
-                        // Route points: origin → current → destination
+                        // Route points: origin → (waypoints, if defined) → current → destination
                         const routePoints = [];
+                        @php $waypoints = $booking['route_waypoints'] ?? null; @endphp
+                        @if($waypoints)
+                        const waypoints = @json($waypoints);
+                        @else
+                        const waypoints = [];
+                        @endif
 
                         @if($originCoords)
                         const originLatLng = [{{ $originCoords[0] }}, {{ $originCoords[1] }}];
@@ -203,6 +209,8 @@
                         routePoints.push(originLatLng);
                         @endif
 
+                        // Include waypoints in the bounds so the whole shipping lane is visible on initial fit
+                        for (const wp of waypoints) { routePoints.push(wp); }
                         routePoints.push([lat, lng]);
 
                         @if($destCoords)
@@ -219,17 +227,45 @@
                         routePoints.push(destLatLng);
                         @endif
 
-                        // Route polyline: solid completed leg + dashed remaining leg
-                        @if($originCoords)
-                        L.polyline([routePoints[0], [lat, lng]], {
-                            color: '#0f3b66', weight: 2, opacity: 0.7,
-                        }).addTo(map);
-                        @endif
-                        @if($destCoords)
-                        L.polyline([[lat, lng], routePoints[routePoints.length - 1]], {
-                            color: '#3b82f6', weight: 2, opacity: 0.5, dashArray: '6, 8',
-                        }).addTo(map);
-                        @endif
+                        // Route polyline: realistic path through shipping-lane waypoints
+                        // (Strait of Hormuz, Bab-el-Mandeb, Suez, Gibraltar, etc.) when defined,
+                        // otherwise straight lines origin → vessel → destination.
+                        if (waypoints.length > 0 && {{ $originCoords ? 'true' : 'false' }} && {{ $destCoords ? 'true' : 'false' }}) {
+                            const fullPath = [originLatLng, ...waypoints, destLatLng];
+                            const currentLatLng = [lat, lng];
+
+                            // Find the waypoint closest to current vessel position to split sailed/remaining
+                            let closestIdx = 0;
+                            let closestDist = Infinity;
+                            for (let i = 0; i < fullPath.length; i++) {
+                                const d = Math.sqrt(
+                                    Math.pow(fullPath[i][0] - lat, 2) +
+                                    Math.pow(fullPath[i][1] - lng, 2)
+                                );
+                                if (d < closestDist) { closestDist = d; closestIdx = i; }
+                            }
+
+                            const sailedPath    = fullPath.slice(0, closestIdx + 1).concat([currentLatLng]);
+                            const remainingPath = [currentLatLng].concat(fullPath.slice(closestIdx + 1));
+
+                            L.polyline(sailedPath, {
+                                color: '#0f3b66', weight: 2.5, opacity: 0.75,
+                            }).addTo(map);
+                            L.polyline(remainingPath, {
+                                color: '#3b82f6', weight: 2, opacity: 0.55, dashArray: '6, 8',
+                            }).addTo(map);
+                        } else {
+                            @if($originCoords)
+                            L.polyline([originLatLng, [lat, lng]], {
+                                color: '#0f3b66', weight: 2, opacity: 0.7,
+                            }).addTo(map);
+                            @endif
+                            @if($destCoords)
+                            L.polyline([[lat, lng], destLatLng], {
+                                color: '#3b82f6', weight: 2, opacity: 0.5, dashArray: '6, 8',
+                            }).addTo(map);
+                            @endif
+                        }
 
                         // Fit map to all route points initially
                         const routeBounds = L.latLngBounds(routePoints);

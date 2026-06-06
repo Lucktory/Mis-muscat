@@ -224,6 +224,12 @@ return [
         'customs_code' => 'pending',
         'documents'    => ['BL' => 'available', 'CI' => 'available', 'PL' => 'available', 'COO' => 'available'],
         'last_position'=> 'Live AIS — transhipment vessel post-Suez, Mediterranean',
+        'route_waypoints' => [
+            [26.40,  56.50], [22.00,  60.00], [13.00,  50.00], [12.50,  43.50],
+            [22.00,  38.00], [28.00,  33.50], [31.30,  32.30], [33.50,  30.00],
+            [36.00,  11.00], [36.00,  -5.50], [38.00, -30.00], [28.00, -75.00],
+            [27.50, -86.00], [29.00, -94.00],
+        ],
         'audit' => [
             ['ts' => '2026-05-28 09:00', 'action' => 'booking_created',     'actor' => 'Joju.P', 'detail' => 'LCL Houston booking'],
             ['ts' => '2026-06-03 14:00', 'action' => 'vessel_departed',     'actor' => 'system', 'detail' => 'MSC HELENA III, Muscat → Med → Houston'],
@@ -271,6 +277,12 @@ return [
         'customs_code' => 'cleared',
         'documents'    => ['BL' => 'available', 'CI' => 'available', 'PL' => 'available', 'COO' => 'available', 'EUR.1' => 'available'],
         'last_position'=> 'Live AIS — vessel transiting Suez northbound',
+        'route_waypoints' => [
+            [26.40,  56.50], [22.00,  60.00], [13.00,  50.00], [12.50,  43.50],
+            [22.00,  38.00], [28.00,  33.50], [29.95,  32.55], [31.30,  32.30],
+            [34.50,  21.00], [37.50,  11.00], [36.00,  -5.50], [44.00,  -8.00],
+            [49.50,  -5.00], [51.30,   2.50],
+        ],
         'audit' => [
             ['ts' => '2026-05-25 10:00', 'action' => 'booking_created',  'actor' => 'Joju.P',  'detail' => 'Antwerp shipment confirmed by Oman Aluminium'],
             ['ts' => '2026-06-01 22:00', 'action' => 'vessel_departed',  'actor' => 'system',  'detail' => 'YM WELLNESS from Sohar'],
@@ -390,6 +402,12 @@ return [
         'customs_code' => 'cleared',
         'documents'    => ['BL' => 'available', 'CI' => 'available', 'PL' => 'available', 'DG-DECL' => 'available', 'TEMP-LOG' => 'available'],
         'last_position'=> 'Live AIS — vessel at Mediterranean transhipment hub',
+        'route_waypoints' => [
+            [26.40,  56.50], [22.00,  60.00], [13.00,  50.00], [12.50,  43.50],
+            [22.00,  38.00], [28.00,  33.50], [31.30,  32.30], [33.50,  30.00],
+            [33.50,  35.00], [31.30,  32.30], [22.00,  38.00], [12.50,  43.50],
+            [11.50,  51.00], [-2.00,  46.00],
+        ],
         'audit' => [
             ['ts' => '2026-05-22 10:00', 'action' => 'booking_created',  'actor' => 'Joju.P',  'detail' => 'Renault DG/reefer booking to Mombasa'],
             ['ts' => '2026-05-24 16:00', 'action' => 'dg_declared',      'actor' => 'Ahmed.S', 'detail' => 'IMDG class 9 declaration filed and approved'],
@@ -462,6 +480,12 @@ return [
         'customs_code' => 'cleared',
         'documents'    => ['BL' => 'available', 'CI' => 'available', 'PL' => 'available', 'COO' => 'available'],
         'last_position'=> 'Live AIS — vessel post-Suez, central Mediterranean',
+        'route_waypoints' => [
+            [26.40,  56.50], [22.00,  60.00], [13.00,  50.00], [12.50,  43.50],
+            [22.00,  38.00], [28.00,  33.50], [31.30,  32.30], [34.50,  21.00],
+            [37.50,  11.00], [36.00,  -5.50], [44.00,  -8.00], [49.50,  -5.00],
+            [51.30,   2.50],
+        ],
         'audit' => [
             ['ts' => '2026-05-27 11:00', 'action' => 'booking_created',  'actor' => 'Joju.P',  'detail' => 'Renaissance Rotterdam LCL consolidation'],
             ['ts' => '2026-05-30 22:00', 'action' => 'consolidated',     'actor' => 'warehouse-ops', 'detail' => 'Loaded with 8 other LCL units, MSC SOFIA'],
