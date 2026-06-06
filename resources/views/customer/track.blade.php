@@ -19,7 +19,9 @@
         'Mumbai (NSA), India'            => [18.94,  72.95],
         'Sohar, Oman'                    => [24.34,  56.71],
         'Sohar Port, Oman'               => [24.50,  56.65],
+        'Sohar Free Zone, Oman'          => [24.40,  56.60],
         'Salalah, Oman'                  => [16.94,  54.01],
+        'Salalah Free Zone, Oman'        => [16.97,  54.05],
         'Muscat, Oman'                   => [23.61,  58.59],
         'Muscat Industrial Estate'       => [23.61,  58.59],
         'Jebel Ali, UAE'                 => [25.02,  55.13],
@@ -29,6 +31,14 @@
         'Dar es Salaam, Tanzania'        => [ -6.82,  39.28],
         'Duqm, Oman'                     => [19.65,  57.71],
         'Sohar Industrial Estate'        => [24.34,  56.71],
+        'Singapore'                      => [ 1.29, 103.85],
+        'Frankfurt (FRA), Germany'       => [50.04,   8.56],
+        'Umm Qasr, Iraq'                 => [30.04,  47.93],
+        'Mombasa, Kenya'                 => [-4.04,  39.66],
+        'Abu Dhabi, UAE'                 => [24.46,  54.36],
+        'Yokohama, Japan'                => [35.45, 139.65],
+        'Rotterdam, Netherlands'         => [51.95,   4.13],
+        'Manama, Bahrain'                => [26.22,  50.59],
     ];
     $originCoords = $ports[$booking['origin']] ?? null;
     $destCoords   = $ports[$booking['destination']] ?? null;
@@ -141,6 +151,9 @@
                     }
                     .leaflet-bar a.map-action-btn:hover { background: #f1f5f9; }
                     .leaflet-bar a.map-action-btn svg { width: 16px; height: 16px; }
+                    #vessel-map:fullscreen, #vessel-map:-webkit-full-screen {
+                        width: 100vw !important; height: 100vh !important; background: #fff;
+                    }
                 </style>
                 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
                         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -252,6 +265,34 @@
                                     if (routePoints.length > 1) {
                                         map.flyToBounds(routeBounds, { padding: [50, 50], maxZoom: 6, duration: 0.8 });
                                     }
+                                });
+
+                                const fsBtn = L.DomUtil.create('a', 'map-action-btn', div);
+                                fsBtn.href = '#';
+                                fsBtn.title = 'Pantalla completa / Fullscreen';
+                                fsBtn.setAttribute('role', 'button');
+                                const enterIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 9 4 4 9 4"/><polyline points="20 9 20 4 15 4"/><polyline points="4 15 4 20 9 20"/><polyline points="20 15 20 20 15 20"/></svg>';
+                                const exitIcon  = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 4 4 4 4 9"/><polyline points="15 4 20 4 20 9"/><polyline points="9 20 4 20 4 15"/><polyline points="15 20 20 20 20 15"/></svg>';
+                                fsBtn.innerHTML = enterIcon;
+                                L.DomEvent.on(fsBtn, 'click', function (e) {
+                                    L.DomEvent.preventDefault(e);
+                                    L.DomEvent.stopPropagation(e);
+                                    const el = document.getElementById('vessel-map');
+                                    if (!document.fullscreenElement) {
+                                        if (el.requestFullscreen) el.requestFullscreen();
+                                        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+                                    } else {
+                                        if (document.exitFullscreen) document.exitFullscreen();
+                                        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                                    }
+                                });
+                                document.addEventListener('fullscreenchange', function () {
+                                    fsBtn.innerHTML = document.fullscreenElement ? exitIcon : enterIcon;
+                                    setTimeout(function () { map.invalidateSize(); }, 120);
+                                });
+                                document.addEventListener('webkitfullscreenchange', function () {
+                                    fsBtn.innerHTML = document.fullscreenElement ? exitIcon : enterIcon;
+                                    setTimeout(function () { map.invalidateSize(); }, 120);
                                 });
 
                                 L.DomEvent.disableClickPropagation(div);
